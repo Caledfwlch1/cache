@@ -145,9 +145,8 @@ func (c slCachType)increaceFirstElement(i, t int) {
 	return
 }
 
-func (c slCachType)increaceSecondElement(i, t, brd int) {
+func (c slCachType)increaceSecondElement(i, t int) {
 	a1 := c[i].i
-	if a1 < brd {return}
 	a2 := c[i].l
 	c[i].l = math.Sqrt( (float64(a1*a1) + a2*a2)/2 )
 	c[i].t = t
@@ -155,8 +154,7 @@ func (c slCachType)increaceSecondElement(i, t, brd int) {
 	return
 }
 
-func (c slCachType)increaceSecondElement1(i, t, brd int) {
-	if i < brd {return}
+func (c slCachType)increaceSecondElement1(i, t int) {
 	a1 := c[i].i
 	a2 := c[i].l
 	c[i].l = (float64(a1) + a2)/2
@@ -164,8 +162,7 @@ func (c slCachType)increaceSecondElement1(i, t, brd int) {
 	return
 }
 
-func (c slCachType)increaceSecondElement2(i, t, brd int) {
-	if i < brd {return}
+func (c slCachType)increaceSecondElement2(i, t int) {
 	a1 := c[i].i
 	if a1 == 0 { a1 = 1 }
 	a2 := c[i].l
@@ -176,14 +173,9 @@ func (c slCachType)increaceSecondElement2(i, t, brd int) {
 	return
 }
 
-func (c slCachType)increaceSecondElement3(i, t, brd int) {
-
+func (c slCachType)increaceSecondElement3(i, t int) {
 	a1 := c[i].i
-	if a1 < brd {return}
-	//if a1 == 0 { a1 = 1 }
 	a2 := c[i].l
-	//if a2 == 0 { a2 = 1 }
-
 	c[i].l = math.Sqrt(float64(a1) + a2)
 	c[i].t = t
 	return
@@ -210,7 +202,7 @@ func main() {
 	m := 1
 	miss := 0
 	goal := 0
-	brd := 0
+
 	hist := make(map[int]int)
 	for {
 		st, err := enc.Read()
@@ -230,7 +222,7 @@ func main() {
 			if blk == n.num {
 
 				ch.increaceFirstElement(i, time)
-				ch.increaceSecondElement(i, time, brd)
+				ch.increaceSecondElement(i, time)
 				found = true
 				goal ++
 
@@ -242,14 +234,17 @@ func main() {
 			miss++
 			k := ch.detectEmpty()
 			ch.newElement(k, hist[blk], blk, time)
-			ch.increaceSecondElement(k, time, brd)
+			ch.increaceSecondElement(k, time)
 
 		}
 
-		brd = 0 // goal / longCache
+		//if m % 1000 == 0 {
+		//	for i, n := range ch {
+		//		ch.increaceSecondElement(i, n.t)
+		//	}
+		//}
 
-
-		if m % 1000 == 0 {
+		if m % 10000 == 0 {
 			//fmt.Println(ch)
 			for i, j := range hist {
 				if j < 2 { delete(hist, i) }
