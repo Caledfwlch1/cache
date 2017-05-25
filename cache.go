@@ -134,8 +134,8 @@ func (c slCachType)detectEmpty1() int {
 	return k
 }
 
-func (c slCachType)newElement(i, n, t int) {
-	c[i] = cachType{1, 0, n, t}
+func (c slCachType)newElement(i, k, n, t int) {
+	c[i] = cachType{k, 0, n, t}
 	return
 }
 
@@ -151,6 +151,7 @@ func (c slCachType)increaceSecondElement(i, t, brd int) {
 	a2 := c[i].l
 	c[i].l = math.Sqrt( (float64(a1*a1) + a2*a2)/2 )
 	c[i].t = t
+	// c[i].i = 0
 	return
 }
 
@@ -210,6 +211,7 @@ func main() {
 	miss := 0
 	goal := 0
 	brd := 0
+	hist := make(map[int]int)
 	for {
 		st, err := enc.Read()
 		if err == io.EOF { break }
@@ -219,6 +221,8 @@ func main() {
 		blk, _	:= strconv.Atoi(st[1])
 		//num, _	:= strconv.Atoi(st[2])
 
+		tmp := hist[blk]
+		hist[blk] = tmp +1
 
 		found := false
 		for i, n := range ch {
@@ -236,36 +240,29 @@ func main() {
 		if !found {
 
 			miss++
-			k := ch.detectEmpty1()
-			ch.newElement(k, blk, time)
+			k := ch.detectEmpty()
+			ch.newElement(k, hist[blk], blk, time)
 			ch.increaceSecondElement(k, time, brd)
 
 		}
 
-		brd =  goal / longCache
-//fmt.Println(brd)
-		//if m % 500 == 0 {
-		//	for i, n := range ch {
-		//		ch.increaceSecondElement3(i, n.t)
-		//	}
-		//}
+		brd = 0 // goal / longCache
 
-		//if m % 50000 == 0 {
-		//	//fmt.Println(ch)
-		//	for i, _ := range ch {
-		//		//ch.increaceSecondElement(i, n.t)
-		//		ch[i].i = 0
-		//	}
-		//	//fmt.Println(m/100, ch)
-		//}
 
+		if m % 1000 == 0 {
+			//fmt.Println(ch)
+			for i, j := range hist {
+				if j < 2 { delete(hist, i) }
+			}
+			//fmt.Println(m/100, ch)
+		}
 
 		m++
 	}
 
 	sort.Sort(ch)
 	fmt.Println(ch)
-	fmt.Println("miss=", miss, "goal=", goal)
+	fmt.Println("miss=", miss, "goal=", goal, "len(hist)=", len(hist))
 	fmt.Println("effect=", float64(goal)/float64(miss))
 
 	return
