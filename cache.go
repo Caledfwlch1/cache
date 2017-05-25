@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"math"
 	//"math/rand"
+	"sort"
 )
 
 var longCache	int
@@ -30,11 +31,11 @@ type cachType struct {
 type slCachType []cachType
 
 func (c slCachType)detectEmpty() int {
-	j := 0 // rand.Intn(longCache)
+	j := 0 // len(c) - 1 // rand.Intn(longCache) //
 	minI := c[j].i
 	minL := c[j].l
 	minT := c[j].t
-	k := 0
+	k := j
 	for i, n := range c {
 		if n.i == 0 && n.l == 0 && n.t == 0 {
 			return i
@@ -63,50 +64,137 @@ func (c slCachType)detectEmpty() int {
 			k = i
 			continue
 		}
-
 	}
 
 	return k
 }
 
-func (c *slCachType)newElement(i, n, t int) {
-	(*c)[i] = cachType{1, 0, n, t}
+func (c slCachType)detectEmpty1() int {
+	j := 0 // len(c) - 1 // rand.Intn(longCache) //
+	minI := c[j].i
+	minL := c[j].l
+	minT := c[j].t
+	k := j
+	for i, n := range c {
+		if n.i == 0 && n.l == 0 && n.t == 0 {
+			return i
+		}
+
+		if minL > n.l {
+			minI = n.i
+			minL = n.l
+			minT = n.t
+			k = i
+			continue
+		}
+
+		if minL == n.l {
+			if minI > n.i {
+				minI = n.i
+				minL = n.l
+				minT = n.t
+				k = i
+				continue
+			}
+			if minI == n.i && minT > n.t {
+				minI = n.i
+				minL = n.l
+				minT = n.t
+				k = i
+				continue
+			}
+		}
+
+		if minI > n.i {
+			minI = n.i
+			minL = n.l
+			minT = n.t
+			k = i
+			continue
+		}
+
+		if minI == n.i && minT > n.t {
+			minI = n.i
+			minL = n.l
+			minT = n.t
+			k = i
+			continue
+
+		}
+
+		if minT >= n.t {
+			minI = n.i
+			minL = n.l
+			minT = n.t
+			k = i
+			continue
+		}
+	}
+
+	return k
+}
+
+func (c slCachType)newElement(i, n, t int) {
+	c[i] = cachType{1, 0, n, t}
 	return
 }
 
-func (c *slCachType)increaceFirstElement(i, t int) {
-	(*c)[i].i ++
-	(*c)[i].t = t
+func (c slCachType)increaceFirstElement(i, t int) {
+	c[i].i ++
+	c[i].t = t
 	return
 }
 
-func (c *slCachType)increaceSecondElement(i, t int) {
-	a1 := (*c)[i].i
-	a2 := (*c)[i].l
-	(*c)[i].l = math.Sqrt( (float64(a1*a1) + a2*a2)/2 )
-	(*c)[i].t = t
+func (c slCachType)increaceSecondElement(i, t, brd int) {
+	a1 := c[i].i
+	if a1 < brd {return}
+	a2 := c[i].l
+	c[i].l = math.Sqrt( (float64(a1*a1) + a2*a2)/2 )
+	c[i].t = t
 	return
 }
 
-func (c *slCachType)increaceSecondElement1(i, t int) {
-	a1 := (*c)[i].i
-	a2 := (*c)[i].l
-	(*c)[i].l = (float64(a1) + a2)/2
-	(*c)[i].t = t
+func (c slCachType)increaceSecondElement1(i, t, brd int) {
+	if i < brd {return}
+	a1 := c[i].i
+	a2 := c[i].l
+	c[i].l = (float64(a1) + a2)/2
+	c[i].t = t
 	return
 }
 
-func (c *slCachType)increaceSecondElement2(i, t int) {
-	a1 := (*c)[i].i
+func (c slCachType)increaceSecondElement2(i, t, brd int) {
+	if i < brd {return}
+	a1 := c[i].i
 	if a1 == 0 { a1 = 1 }
-	a2 := (*c)[i].l
+	a2 := c[i].l
 	if a2 == 0 { a2 = 1 }
 
-	(*c)[i].l = 2/ (1/float64(a1) + 1/a2)
-	(*c)[i].t = t
+	c[i].l = 2/ (1/float64(a1) + 1/a2)
+	c[i].t = t
 	return
 }
 
+func (c slCachType)increaceSecondElement3(i, t, brd int) {
+
+	a1 := c[i].i
+	if a1 < brd {return}
+	//if a1 == 0 { a1 = 1 }
+	a2 := c[i].l
+	//if a2 == 0 { a2 = 1 }
+
+	c[i].l = math.Sqrt(float64(a1) + a2)
+	c[i].t = t
+	return
+}
+
+func (c slCachType)Len() int { return len(c) }
+
+func (c slCachType)Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
+func (c slCachType)Less(i, j int) bool {
+	return c[i].num < c[j].num
+}
 
 func main() {
 
@@ -119,6 +207,9 @@ func main() {
 
 	enc := csv.NewReader(fi)
 	m := 1
+	miss := 0
+	goal := 0
+	brd := 0
 	for {
 		st, err := enc.Read()
 		if err == io.EOF { break }
@@ -135,22 +226,34 @@ func main() {
 			if blk == n.num {
 
 				ch.increaceFirstElement(i, time)
-				ch.increaceSecondElement(i, time)
+				ch.increaceSecondElement(i, time, brd)
 				found = true
+				goal ++
 
 				break
 			}
 		}
 		if !found {
-			k := ch.detectEmpty()
+
+			miss++
+			k := ch.detectEmpty1()
 			ch.newElement(k, blk, time)
-			ch.increaceSecondElement(k, time)
+			ch.increaceSecondElement(k, time, brd)
+
 		}
 
-		//if m %500 == 0 {
+		brd =  goal / longCache
+//fmt.Println(brd)
+		//if m % 500 == 0 {
+		//	for i, n := range ch {
+		//		ch.increaceSecondElement3(i, n.t)
+		//	}
+		//}
+
+		//if m % 50000 == 0 {
 		//	//fmt.Println(ch)
 		//	for i, _ := range ch {
-		//		//ch.increaceSecondElement(i)
+		//		//ch.increaceSecondElement(i, n.t)
 		//		ch[i].i = 0
 		//	}
 		//	//fmt.Println(m/100, ch)
@@ -160,7 +263,10 @@ func main() {
 		m++
 	}
 
+	sort.Sort(ch)
 	fmt.Println(ch)
+	fmt.Println("miss=", miss, "goal=", goal)
+	fmt.Println("effect=", float64(goal)/float64(miss))
 
 	return
 }
