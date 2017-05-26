@@ -9,7 +9,6 @@ import (
 	"io"
 	"strconv"
 	"math"
-	//"math/rand"
 	"sort"
 )
 
@@ -25,26 +24,23 @@ type cachType struct {
 	i	int
 	l	float64
 	num	int
-	t	int
 }
 
 type slCachType []cachType
 
 func (c slCachType)detectEmpty() int {
-	j := 0 // len(c) - 1 // rand.Intn(longCache) //
+	j := 0
 	minI := c[j].i
 	minL := c[j].l
-	minT := c[j].t
 	k := j
 	for i, n := range c {
-		if n.i == 0 && n.l == 0 && n.t == 0 {
+		if n.i == 0 && n.l == 0 {
 			return i
 		}
 
 		if minL > n.l {
 			minI = n.i
 			minL = n.l
-			minT = n.t
 			k = i
 			continue
 		}
@@ -52,15 +48,6 @@ func (c slCachType)detectEmpty() int {
 		if minI > n.i {
 			minI = n.i
 			minL = n.l
-			minT = n.t
-			k = i
-			continue
-		}
-
-		if minT > n.t {
-			minI = n.i
-			minL = n.l
-			minT = n.t
 			k = i
 			continue
 		}
@@ -69,115 +56,50 @@ func (c slCachType)detectEmpty() int {
 	return k
 }
 
-func (c slCachType)detectEmpty1() int {
-	j := 0 // len(c) - 1 // rand.Intn(longCache) //
-	minI := c[j].i
-	minL := c[j].l
-	minT := c[j].t
-	k := j
-	for i, n := range c {
-		if n.i == 0 && n.l == 0 && n.t == 0 {
-			return i
-		}
-
-		if minL > n.l {
-			minI = n.i
-			minL = n.l
-			minT = n.t
-			k = i
-			continue
-		}
-
-		if minL == n.l {
-			if minI > n.i {
-				minI = n.i
-				minL = n.l
-				minT = n.t
-				k = i
-				continue
-			}
-			if minI == n.i && minT > n.t {
-				minI = n.i
-				minL = n.l
-				minT = n.t
-				k = i
-				continue
-			}
-		}
-
-		if minI > n.i {
-			minI = n.i
-			minL = n.l
-			minT = n.t
-			k = i
-			continue
-		}
-
-		if minI == n.i && minT > n.t {
-			minI = n.i
-			minL = n.l
-			minT = n.t
-			k = i
-			continue
-
-		}
-
-		if minT >= n.t {
-			minI = n.i
-			minL = n.l
-			minT = n.t
-			k = i
-			continue
-		}
-	}
-
-	return k
-}
-
-func (c slCachType)newElement(i, k, n, t int) {
-	c[i] = cachType{k, 0, n, t}
+func (c slCachType)newElement(i, k, n int) {
+	c[i] = cachType{k, 0, n}
 	return
 }
 
-func (c slCachType)increaceFirstElement(i, t int) {
+func (c slCachType)increaceFirstElement(i int) {
 	c[i].i ++
-	c[i].t = t
+	//c[i].t = t
 	return
 }
 
-func (c slCachType)increaceSecondElement(i, t int) {
+func (c slCachType)increaceSecondElement(i int) {
 	a1 := c[i].i
 	a2 := c[i].l
 	c[i].l = math.Sqrt( (float64(a1*a1) + a2*a2)/2 )
-	c[i].t = t
+	//c[i].t = t
 	// c[i].i = 0
 	return
 }
 
-func (c slCachType)increaceSecondElement1(i, t int) {
+func (c slCachType)increaceSecondElement1(i int) {
 	a1 := c[i].i
 	a2 := c[i].l
 	c[i].l = (float64(a1) + a2)/2
-	c[i].t = t
+	//c[i].t = t
 	return
 }
 
-func (c slCachType)increaceSecondElement2(i, t int) {
+func (c slCachType)increaceSecondElement2(i int) {
 	a1 := c[i].i
 	if a1 == 0 { a1 = 1 }
 	a2 := c[i].l
 	if a2 == 0 { a2 = 1 }
 
 	c[i].l = 2/ (1/float64(a1) + 1/a2)
-	c[i].t = t
+	//c[i].t = t
 	return
 }
 
-func (c slCachType)increaceSecondElement3(i, t int) {
+func (c slCachType)increaceSecondElement3(i int) {
 	a1 := c[i].i
 	a2 := c[i].l
 	c[i].l = math.Sqrt(float64(a1) + a2)
-	c[i].t = t
+	//c[i].t = t
 	return
 }
 
@@ -209,7 +131,7 @@ func main() {
 		if err == io.EOF { break }
 		if err != nil { log.Fatalf("Error parsing file %s - \n", fiName, err) }
 
-		time, _	:= strconv.Atoi(st[0])
+		//time, _	:= strconv.Atoi(st[0])
 		blk, _	:= strconv.Atoi(st[1])
 		//num, _	:= strconv.Atoi(st[2])
 
@@ -220,36 +142,27 @@ func main() {
 		for i, n := range ch {
 
 			if blk == n.num {
-
-				ch.increaceFirstElement(i, time)
-				ch.increaceSecondElement(i, time)
+				ch.increaceFirstElement(i)
+				ch.increaceSecondElement(i)
 				found = true
 				goal ++
-
 				break
 			}
 		}
+
 		if !found {
 
 			miss++
 			k := ch.detectEmpty()
-			ch.newElement(k, hist[blk], blk, time)
-			ch.increaceSecondElement(k, time)
+			ch.newElement(k, hist[blk], blk)
+			ch.increaceSecondElement(k)
 
 		}
 
-		//if m % 1000 == 0 {
-		//	for i, n := range ch {
-		//		ch.increaceSecondElement(i, n.t)
-		//	}
-		//}
-
 		if m % 10000 == 0 {
-			//fmt.Println(ch)
 			for i, j := range hist {
 				if j < 2 { delete(hist, i) }
 			}
-			//fmt.Println(m/100, ch)
 		}
 
 		m++
@@ -268,7 +181,7 @@ func (c slCachType)String() string {
 	for _, l := range c {
 		m := fmt.Sprint(l.l)
 		if len(m) > 4 { m = m[:4] }
-		s += fmt.Sprintf("{ %d, %s, %6d, %3d }\n", l.i, m, l.num, l.t)
+		s += fmt.Sprintf("{ %d, %s, %6d }\n", l.i, m, l.num)
 	}
 	return s
 }
